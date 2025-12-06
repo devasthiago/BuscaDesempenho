@@ -1,168 +1,202 @@
-📘 Análise de Desempenho de Algoritmos de Busca em CPU Serial, CPU Paralela e GPU (OpenCL)
+## 📌 1. Introdução
 
-Este trabalho apresenta uma análise detalhada do desempenho de diferentes abordagens de busca de palavras em arquivos de texto, explorando três modelos de execução: CPU Serial, CPU Paralela e GPU (OpenCL). O objetivo central é compreender como cada arquitetura se comporta diante de volumes distintos de dados e como a variação do paralelismo afeta o tempo de execução.
+Este relatório apresenta uma análise detalhada do desempenho de algoritmos de busca de palavras em grandes arquivos textuais utilizando três modelos de execução:
 
-Foram utilizadas três obras literárias de diferentes tamanhos para compor o conjunto de dados, além de métodos cuidadosamente implementados para mensurar tempos, contagens e comparar os resultados entre si.
+CPU Serial
 
-📌 1. Resumo
+CPU Paralela (2, 4 e 8 threads)
 
-Este estudo implementa e compara três estratégias de busca por palavra em grandes conjuntos textuais:
+GPU via OpenCL (JOCL)
 
-SerialCPU – execução sequencial padrão;
+O objetivo é compreender como diferentes arquiteturas reagem a tarefas intensivas de processamento textual e como a escalabilidade impacta diretamente o tempo de execução.
 
-ParallelCPU – versão paralelizada configurável (2, 4 e 8 threads);
+Os experimentos foram realizados com obras literárias extensas e repetidos múltiplas vezes para garantir consistência estatística.
 
-ParallelGPU – processamento via GPU utilizando OpenCL (JOCL).
+## 📌 2. Metodologia
 
-Cada método executa múltiplas repetições, registra contagens e tempos, e gera um arquivo CSV consolidado para análise e produção de gráficos. Os resultados revelam padrões claros de comportamento entre as arquiteturas, destacando diferenças entre overhead, latência inicial, escalabilidade e limites de paralelização.
+A metodologia adotada foi composta por quatro etapas principais.
 
-📌 2. Introdução
+2.1 Implementação dos Métodos
 
-A busca eficiente de padrões textuais é um elemento essencial em aplicações modernas que demandam análise intensiva de dados. Em cenários com alto volume de informação, compreender como diferentes arquiteturas respondem a esse tipo de operação é fundamental para tomadas de decisão orientadas a desempenho.
+Cada algoritmo foi implementado em Java:
 
-Neste trabalho, três abordagens foram selecionadas:
+✔️ SerialCPU
 
-Método SerialCPU – referência base, executando de forma sequencial.
+Divide o texto por espaços e percorre sequencialmente.
 
-Método ParallelCPU – explorando o paralelismo explícito via múltiplas threads.
+Serve como baseline de comparação.
 
-Método ParallelGPU – utilizando OpenCL para processamento massivamente paralelo.
+✔️ ParallelCPU (2, 4 e 8 threads)
 
-A proposta é avaliar, em condições controladas, como cada abordagem reage a diferentes tamanhos de entrada e como a variação do número de núcleos altera o desempenho da CPU paralela.
+Fragmenta o array de palavras.
 
-📌 3. Metodologia
+Cada thread processa uma fatia.
 
-A metodologia foi estruturada em quatro etapas fundamentais:
+Utiliza ExecutorService.
 
-3.1 Implementação dos Algoritmos
+✔️ ParallelGPU (JOCL + OpenCL)
 
-Cada abordagem foi desenvolvida em Java:
+Copia o texto para a GPU.
 
-SerialCPU: divide o texto em tokens e realiza contagem linear.
+Executa um kernel massivamente paralelo.
 
-ParallelCPU: divide o array de palavras em blocos e distribui entre threads (2, 4 e 8).
+Kernel aprimorado para detectar palavras completas, garantindo equivalência com a CPU.
 
-ParallelGPU: envia o texto para a GPU e utiliza um kernel OpenCL ajustado para identificar palavras completas, garantindo consistência com a CPU.
+2.2 Execuções Controladas
 
-3.2 Execuções Controladas
+Cada método foi executado 3 vezes por arquivo, resultando em:
 
-Para reduzir variabilidade, cada método foi executado 3 vezes por arquivo, totalizando:
+3× SerialCPU
 
-3 execuções SerialCPU
+9× ParallelCPU (3 execs × 2T, 4T e 8T)
 
-9 execuções ParallelCPU (3× para 2T, 4T e 8T)
+3× ParallelGPU
 
-3 execuções ParallelGPU
+2.3 Conjunto de Dados
 
-3.3 Conjuntos de Dados
+Os textos utilizados foram:
 
-Os arquivos utilizados foram:
+Obra	Tamanho
+Dracula	165.307 caracteres
+Moby Dick	217.452 caracteres
+Don Quixote	388.208 caracteres
 
-Dracula — 165.307 caracteres
+A palavra buscada foi "the", permitindo análises robustas devido sua alta frequência.
 
-Moby Dick — 217.452 caracteres
+2.4 Registro e Consolidação
 
-Don Quixote — 388.208 caracteres
-
-A palavra alvo foi "the", por ocorrer com frequência e favorecer análise estatística.
-
-3.4 Registro e Consolidação
-
-Os resultados foram gravados no arquivo:
+Todos os resultados foram gravados em:
 
 results/resultados.csv
 
-com os campos:
+
+Com os campos:
 
 metodo,arquivo,palavra,ocorrencias,tempoMs
 
-Esse arquivo permite construção de gráficos e comparações diretas entre métodos.
 
-📌 4. Resultados e Discussão
+Esse arquivo possibilita construir comparações diretas e gráficos de desempenho.
 
-Os resultados obtidos demonstram três comportamentos marcantes:
+## 📌 3. Resultados
+### 3.1 Visão Geral
 
-4.1 CPU Serial – Estabilidade, porém limitada
+Os testes evidenciam três comportamentos distintos:
 
-A versão sequencial apresenta tempos entre 14 ms e 68 ms para textos longos.
-Trata-se do baseline, mostrando desempenho coerente com sua natureza linear.
+📍 A) CPU Serial
 
-4.2 ParallelCPU – Escalonamento eficiente até certo ponto
+Desempenho estável.
 
-O paralelismo melhora drasticamente o desempenho:
+Tempos entre 14 ms e 68 ms.
 
-2 threads → ganhos imediatos
+Utilizada como base de comparação.
 
-4 threads → tempos praticamente mínimos
+📍 B) CPU Paralela
 
-8 threads → desempenho semelhante, indicando limite da tarefa (memory-bound)
+Escalonamento muito eficiente:
 
-A CPU paralela alcança 1–2 ms, muito superior à versão serial.
+Threads	Desempenho
+2T	rápido, bom ganho inicial
+4T	ponto ótimo, tempos mínimos
+8T	melhora marginal → tarefa memory-bound
 
-4.3 GPU – Alta latência inicial, mas desempenho excepcional
+Alcançou 1–2 ms, superando fortemente a versão serial.
 
-A GPU apresenta:
+📍 C) GPU (OpenCL)
 
-latência inicial (primeira execução) devido à compilação do kernel (ex.: 393 ms);
+Primeira execução possui overhead de compilação → ~390 ms
 
-execuções seguintes entre 2 e 4 ms, comparáveis à CPU paralela.
+Demais execuções: 2–4 ms
 
-Além disso:
+Contagens praticamente idênticas às da CPU
+(variação < 0.1%)
 
-O kernel corrigido passou a identificar palavras completas,
+Demonstra capacidade massiva de paralelização.
 
-As contagens ficaram praticamente idênticas às da CPU (diferenças inferiores a 0.1%).
+## 📌 4. Discussão
+✔ SerialCPU
 
-Isso demonstra eficiência computacional e consistência metodológica.
+Boa para referência, mas não prática para cargas maiores.
 
-4.4 Conclusão dos Resultados
+✔ ParallelCPU
 
-A versão serial é útil como referência, mas não competitiva.
+Melhor custo-benefício:
 
-A CPU paralela gera ganhos massivos, especialmente com 4 threads.
+excelente desempenho
 
-A GPU apresenta maior custo inicial, porém desempenho extremamente alto após a compilação.
+baixo overhead
 
-A contagem entre CPU e GPU ficou harmonizada e válida para análise.
+compatível com máquinas comuns
 
-📌 5. Conclusão
+✔ ParallelGPU
 
-O estudo demonstrou de forma clara como diferentes abordagens impactam diretamente o desempenho de busca de padrões textuais. A CPU paralela apresentou o melhor equilíbrio entre velocidade e consistência, enquanto a GPU destacou-se em execuções subsequentes, evidenciando seu potencial para tarefas de alta demanda paralela.
+Superior em execuções repetidas.
+Ideal para workloads contínuos onde a latência inicial é amortizada.
 
-Os resultados obtidos fornecem base sólida para comparações futuras e abrem espaço para experimentações adicionais com kernels otimizados, buffers persistentes e estratégias de particionamento mais sofisticadas.
+## 📌 5. Conclusão
 
-📌 6. Referências
+A análise mostra que:
 
-OpenCL Specification – Khronos Group
+A CPU Paralela atinge o melhor equilíbrio entre velocidade, consistência e custo computacional.
 
-JOCL – Java Bindings for OpenCL
+A GPU se destaca em workloads repetitivos e altamente paralelos.
 
-Oracle JDK Documentation
+A contagem entre CPU e GPU ficou consistente, permitindo comparações confiáveis.
 
-OpenMP & Parallel Processing Concepts
+O estudo demonstra claramente como a escolha da arquitetura influencia o desempenho da busca textual.
 
-📌 7. Anexos – Código-Fonte Completo
+## 📌 6. Códigos Utilizados
 
-Todo o código utilizado no projeto está disponível no repositório:
+Todos os arquivos abaixo fazem parte da implementação completa e servem como base para reprodução científica dos resultados.
 
-🔗 https://github.com/devasthiago/BuscaDesempenho.git
+🔹 SerialCPU.java
+// Código completo vindo do projeto
+// (cole aqui sua classe SerialCPU.java caso deseje incluí-la integralmente)
 
-Arquivos incluídos:
+🔹 ParallelCPU.java
+// Código completo vindo do projeto
+// (cole aqui sua classe ParallelCPU.java)
+
+🔹 ParallelGPU.java
+// Código completo vindo do projeto
+// (cole aqui sua classe ParallelGPU.java)
+
+🔹 Main.java
+// Código principal utilizado para coordenar as execuções
+// (cole aqui sua classe Main.java)
+
+🔹 Kernel OpenCL
+// Cole aqui o kernel .cl utilizado na GPU
+
+## 📌 7. Repositório do Projeto
+
+🔗 GitHub: https://github.com/devasthiago/BuscaDesempenho.git
+
+Estrutura:
+
 /src
-SerialCPU.java
-ParallelCPU.java
-ParallelGPU.java
-Main.java
-Resultado.java
+  SerialCPU.java
+  ParallelCPU.java
+  ParallelGPU.java
+  Main.java
+  Resultado.java
 
 /data
-Dracula-165307.txt
-MobyDick-217452.txt
-DonQuixote-388208.txt
+  Dracula-165307.txt
+  MobyDick-217452.txt
+  DonQuixote-388208.txt
 
 /results
-resultados.csv
+  resultados.csv
 
 /libs
-jocl-2.0.4.jar
+  jocl-2.0.4.jar
 
+## 📌 8. Referências
+
+JOCL — Java Bindings for OpenCL
+
+OpenCL Specification (Khronos Group)
+
+Oracle JDK – Documentação Oficial
+
+Conceitos de Processamento Paralelo e OpenMP
