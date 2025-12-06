@@ -145,7 +145,7 @@ OpenMP & Parallel Processing Concepts
 
 Todo o código utilizado no projeto está disponível no repositório:
 
-🔗 https://github.com/SEU_USUARIO/BuscaDesempenho
+🔗 https://github.com/devasthiago/BuscaDesempenho.git
 
 Arquivos incluídos:
 /src
@@ -165,3 +165,4 @@ resultados.csv
 
 /libs
 jocl-2.0.4.jar
+
